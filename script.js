@@ -31,13 +31,25 @@ document.addEventListener('DOMContentLoaded', () => {
             thickness: 2,
             offset: 10,
             rotation: 0
+        },
+        export: {
+            size: 200,
+            scale: 1.85
         }
     };
+    
+    // Store initial state to detect changes
+    let lastSavedConfigStr = JSON.stringify(config);
 
     // DOM Elements Mapping
     const inputs = {
         color: document.getElementById('crosshairColor'),
         colorHex: document.getElementById('colorHex'),
+        
+        export: {
+            size: document.getElementById('exportSize'),
+            scale: document.getElementById('exportScale')
+        },
         
         centerDot: {
             enabled: document.getElementById('showCenterDot'),
@@ -150,6 +162,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Export & Import
+        inputs.export.size.addEventListener('change', (e) => {
+            config.export.size = parseInt(e.target.value) || 200;
+        });
+        inputs.export.scale.addEventListener('change', (e) => {
+            config.export.scale = parseFloat(e.target.value) || 1.85;
+            draw(); // Redraw because scale affects preview? No, scale is only for export. But maybe user wants to see? 
+            // Actually, renderScene uses scale param. draw() uses scale=1. 
+            // So changing export scale doesn't affect preview. That's fine.
+        });
+
         document.getElementById('downloadBtn').addEventListener('click', downloadPNG);
         document.getElementById('copyCodeBtn').addEventListener('click', copyConfig);
         document.getElementById('importCodeBtn').addEventListener('click', importConfig);
@@ -308,12 +330,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveToHistory(currentConfig) {
+        // Sync export inputs to config before checking
+        if (inputs.export.size) currentConfig.export.size = parseInt(inputs.export.size.value) || 200;
+        if (inputs.export.scale) currentConfig.export.scale = parseFloat(inputs.export.scale.value) || 1.85;
+
+        const currentStr = JSON.stringify(currentConfig);
+        
+        // Don't save if identical to last saved/loaded state
+        if (currentStr === lastSavedConfigStr) {
+            return; 
+        }
+
         let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         
-        // Avoid duplicates (simple check)
-        const currentStr = JSON.stringify(currentConfig);
+        // Avoid duplicates (double check against history head)
         if (history.length > 0 && JSON.stringify(history[0].config) === currentStr) {
-            return; // Don't save if identical to latest
+            lastSavedConfigStr = currentStr; // Update baseline
+            return;
         }
 
         // Generate thumbnail
@@ -322,11 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         thumbCanvas.height = 100;
         const thumbCtx = thumbCanvas.getContext('2d');
         
-        // Render crosshair for thumbnail (scaled to fit)
-        // We use a small scale to make it visible
-        // Assuming default view is 800x600, scaling to 100x100
-        // But we want the crosshair to fill the thumbnail properly
-        // Let's render it centered with scale=1 (or slightly adjusted if needed)
+        // Render crosshair for thumbnail
         renderScene(thumbCtx, 100, 100, 1);
 
         const thumbData = thumbCanvas.toDataURL('image/png');
@@ -342,6 +371,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
         renderHistory();
+        
+        // Update baseline after successful save
+        lastSavedConfigStr = currentStr;
     }
 
     function deleteFromHistory(index) {
@@ -433,6 +465,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputs.outer.offsetNum) inputs.outer.offsetNum.value = config.outer.offset;
         if (inputs.outer.rotation) inputs.outer.rotation.value = config.outer.rotation;
         if (inputs.outer.rotationNum) inputs.outer.rotationNum.value = config.outer.rotation;
+
+        // Export Settings
+        if (config.export) {
+            if (inputs.export.size) inputs.export.size.value = config.export.size;
+            if (inputs.export.scale) inputs.export.scale.value = config.export.scale;
+        }
     }
 
     function loadConfig(newConfig) {
@@ -442,27 +480,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newConfig.outline) Object.assign(config.outline, newConfig.outline);
         if (newConfig.inner) Object.assign(config.inner, newConfig.inner);
         if (newConfig.outer) Object.assign(config.outer, newConfig.outer);
+        if (newConfig.export) {
+             config.export = { ...newConfig.export };
+        } else {
+            // Default if missing in old history
+            config.export = { size: 200, scale: 1.85 };
+        }
         
         updateUI();
         draw();
+        
+        // Update baseline so we don't save if no changes made after load
+        lastSavedConfigStr = JSON.stringify(config);
     }
 
     function downloadPNG() {
-        const sizeInput = document.getElementById('exportSize');
-        const scaleInput = document.getElementById('exportScale');
-        
-        let size = 100;
-        let scale = 1;
-
-        if (sizeInput) {
-            size = parseInt(sizeInput.value) || 100;
-            if (size < 16) size = 16;
-        }
-        
-        if (scaleInput) {
-            scale = parseFloat(scaleInput.value) || 1;
-            if (scale < 0.1) scale = 0.1;
-        }
+        const size = config.export.size;
+        const scale = config.export.scale;
 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = size;
@@ -471,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         renderScene(tCtx, size, size, scale);
         
-        // Save to history when exporting
+        // Save to history when exporting (only if changed)
         saveToHistory(config);
         
         const link = document.createElement('a');
@@ -481,6 +515,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function copyConfig() {
+        // Ensure export settings are up to date
+        if (inputs.export.size) config.export.size = parseInt(inputs.export.size.value) || 200;
+        if (inputs.export.scale) config.export.scale = parseFloat(inputs.export.scale.value) || 1.85;
+
         const code = JSON.stringify(config, null, 2);
         navigator.clipboard.writeText(code).then(() => {
             alert('配置代码已复制到剪贴板！');
@@ -501,10 +539,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newConfig.outline) Object.assign(config.outline, newConfig.outline);
             if (newConfig.inner) Object.assign(config.inner, newConfig.inner);
             if (newConfig.outer) Object.assign(config.outer, newConfig.outer);
+            if (newConfig.export) {
+                config.export = { ...newConfig.export };
+            } else {
+                config.export = { size: 200, scale: 1.85 };
+            }
             
             updateUI();
             draw();
-            saveToHistory(config); // Save on import
+            
+            // Update baseline immediately so we don't auto-save if user closes immediately
+            // But wait, import is an "action", user might want it saved.
+            // The user said "if selected ... no adjustments ... don't save".
+            // Import is explicit. Let's save it.
+            saveToHistory(config); 
+            
             alert("配置已导入！");
         } catch (e) {
             alert("配置代码无效，请确保格式正确！");
