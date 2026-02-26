@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPS 准心生成器 - 适用于无畏契约/CSGO/Apex/Valorant 的在线准星制作工具</title>
+    <meta name="description" content="专业的FPS游戏准心生成器，支持无畏契约(Valorant)、CSGO、CS2、Apex英雄等热门射击游戏。在线自定义准星样式、颜色、大小，一键生成并导出透明PNG图片。提供类似瓦洛兰特的准心设置体验。">
+    <meta name="keywords" content="FPS准心, 准星生成器, 十字准心, 无畏契约准心, Valorant Crosshair, CSGO准心, CS2准心, Apex英雄准心, 射击游戏辅助, 准心模拟器, 在线工具">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="header-title">
+                <h1><i class="fas fa-crosshairs"></i> FPS 准心生成器</h1>
+                <p class="subtitle">适用于 Valorant / CS2 / Apex / Overwatch 的专业准心设计工具</p>
+            </div>
+            <button id="historyBtn" class="history-btn"><i class="fas fa-history"></i> 历史记录</button>
+        </div>
+    </header>
+
+    <!-- History Panel -->
+    <div id="historyPanel" class="history-panel">
+        <div class="history-header">
+            <h3>历史准心 (History)</h3>
+            <div class="history-actions">
+                <button id="clearHistoryBtn" title="清除所有"><i class="fas fa-trash-alt"></i></button>
+                <button id="closeHistoryBtn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="history-grid" id="historyGrid">
+            <!-- Thumbnails will be injected here -->
+        </div>
+    </div>
+
+    <!-- Buy Me A Coffee Widget -->
+    <div class="coffee-widget">
+        <div class="coffee-icon" id="coffeeIcon">
+            <i class="fas fa-heart"></i>
+        </div>
+        <div class="coffee-popup" id="coffeePopup">
+            <div class="coffee-content">
+                <img src="./buy_me_a_coffe.jpg" alt="Buy me a coffee">
+                <p>喵喵喵~ 给个猫罐头吧! 🐱</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="intro-text">
+            <h2>为您的FPS游戏打造完美准星</h2>
+            <p>这是一个纯前端的在线准心生成工具，支持高度自定义。您可以像在《无畏契约 (Valorant)》、《反恐精英 (CS2/CS:GO)》、《Apex 英雄》等游戏中一样调整内十字、外十字、中心点等参数，并支持旋转角度设置。制作完成后，可直接导出透明背景的PNG图片用于直播OBS覆盖或游戏辅助。</p>
+        </div>
+        <div class="layout">
+            <!-- 预览区域 -->
+            <div class="preview-section">
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="crosshairCanvas" width="800" height="600"></canvas>
+                    <div class="bg-controls">
+                        <button class="bg-btn active" data-bg="grid">网格</button>
+                        <button class="bg-btn" data-bg="dark">深色</button>
+                        <button class="bg-btn" data-bg="light">浅色</button>
+                        <button class="bg-btn" data-bg="image">图片</button>
+                        <input type="file" id="bgImageInput" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="export-settings">
+                    <div class="setting-item">
+                        <label for="exportSize">尺寸 (px):</label>
+                        <input type="number" id="exportSize" value="100" min="16" max="2048" step="16">
+                    </div>
+                    <div class="setting-item">
+                        <label for="exportScale">缩放倍率 (Scale):</label>
+                        <input type="number" id="exportScale" value="1" min="0.1" max="10" step="0.1">
+                    </div>
+                </div>
+                <div class="export-controls">
+                    <button id="downloadBtn" class="primary-btn"><i class="fas fa-download"></i> 导出 PNG</button>
+                    <button id="copyCodeBtn" class="secondary-btn"><i class="fas fa-copy"></i> 复制配置</button>
+                    <button id="importCodeBtn" class="secondary-btn"><i class="fas fa-file-import"></i> 导入配置</button>
+                </div>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="controls-section">
+                <div class="accordion">
+                    <!-- 通用设置 -->
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span>通用设置 (General)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="control-group">
+                                <label>准心颜色</label>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="crosshairColor" value="#00ff00">
+                                    <span id="colorHex">#00ff00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="showCenterDot" checked>
+                                    <label for="showCenterDot">启用中心点 (Center Dot)</label>
+                                </div>
+                            </div>
+                            <div class="slider-group indented" data-dependency="showCenterDot">
+                                <label>不透明度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="centerDotOpacity" min="0" max="1" step="0.1" value="1">
+                                    <input type="number" id="centerDotOpacityNum" min="0" max="1" step="0.1" value="1">
+                                </div>
+                                
+                                <label>厚度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="centerDotThickness" min="1" max="10" step="1" value="2">
+                                    <input type="number" id="centerDotThicknessNum" min="1" max="10" step="1" value="2">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="showOutline" checked>
+                                    <label for="showOutline">启用轮廓 (Outlines)</label>
+                                </div>
+                            </div>
+                            <div class="slider-group indented" data-dependency="showOutline">
+                                <label>轮廓不透明度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outlineOpacity" min="0" max="1" step="0.1" value="0.5">
+                                    <input type="number" id="outlineOpacityNum" min="0" max="1" step="0.1" value="0.5">
+                                </div>
+                                
+                                <label>轮廓厚度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outlineThickness" min="1" max="5" step="1" value="1">
+                                    <input type="number" id="outlineThicknessNum" min="1" max="5" step="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内准心 -->
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span>内准心 (Inner Lines)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="control-group">
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="showInnerLines" checked>
+                                    <label for="showInnerLines">显示内准心</label>
+                                </div>
+                            </div>
+                            <div class="slider-group" data-dependency="showInnerLines">
+                                <label>不透明度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="innerOpacity" min="0" max="1" step="0.1" value="1">
+                                    <input type="number" id="innerOpacityNum" min="0" max="1" step="0.1" value="1">
+                                </div>
+
+                                <label>长度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="innerLength" min="0" max="20" step="1" value="6">
+                                    <input type="number" id="innerLengthNum" min="0" max="20" step="1" value="6">
+                                </div>
+
+                                <label>厚度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="innerThickness" min="1" max="10" step="1" value="2">
+                                    <input type="number" id="innerThicknessNum" min="1" max="10" step="1" value="2">
+                                </div>
+
+                                <label>偏移量</label>
+                                <div class="slider-row">
+                                    <input type="range" id="innerOffset" min="0" max="20" step="1" value="3">
+                                    <input type="number" id="innerOffsetNum" min="0" max="20" step="1" value="3">
+                                </div>
+                                
+                                <label>旋转 (度)</label>
+                                <div class="slider-row">
+                                    <input type="range" id="innerRotation" min="0" max="360" step="1" value="0">
+                                    <input type="number" id="innerRotationNum" min="0" max="360" step="1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 外准心 -->
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span>外准心 (Outer Lines)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="control-group">
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="showOuterLines" checked>
+                                    <label for="showOuterLines">显示外准心</label>
+                                </div>
+                            </div>
+                            <div class="slider-group" data-dependency="showOuterLines">
+                                <label>不透明度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outerOpacity" min="0" max="1" step="0.05" value="0.35">
+                                    <input type="number" id="outerOpacityNum" min="0" max="1" step="0.05" value="0.35">
+                                </div>
+
+                                <label>长度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outerLength" min="0" max="20" step="1" value="2">
+                                    <input type="number" id="outerLengthNum" min="0" max="20" step="1" value="2">
+                                </div>
+
+                                <label>厚度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outerThickness" min="1" max="10" step="1" value="2">
+                                    <input type="number" id="outerThicknessNum" min="1" max="10" step="1" value="2">
+                                </div>
+
+                                <label>偏移量</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outerOffset" min="0" max="40" step="1" value="10">
+                                    <input type="number" id="outerOffsetNum" min="0" max="40" step="1" value="10">
+                                </div>
+                                
+                                <label>旋转 (度)</label>
+                                <div class="slider-row">
+                                    <input type="range" id="outerRotation" min="0" max="360" step="1" value="0">
+                                    <input type="number" id="outerRotationNum" min="0" max="360" step="1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
