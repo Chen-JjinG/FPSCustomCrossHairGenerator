@@ -516,13 +516,14 @@ button.secondary-btn:hover {
     background-color: #3d3d3d;
 }
 
-/* Controls Section */
+/* Controls Section - 固定高度 + 内部滚动，避免整页被拉长 */
 .controls-section {
     background-color: var(--bg-panel);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     overflow-y: auto;
-    max-height: 100%;
+    max-height: min(85vh, 720px);
+    min-height: 280px;
 }
 
 .accordion-item {
@@ -667,6 +668,42 @@ input[type="color"] {
 .slider-group.indented {
     padding-left: 10px;
     border-left: 2px solid var(--border-color);
+}
+
+.lock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.lock-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.lock-btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.lock-btn.locked {
+    color: var(--accent-color);
+}
+
+.lock-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 /* Scrollbar */

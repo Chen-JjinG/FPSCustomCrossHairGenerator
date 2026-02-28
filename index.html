@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPS 准心生成器 - 适用于无畏契约/CSGO/Apex/Valorant 的在线准星制作工具</title>
+    <title>威威猫的准心生成器 - 适用于无畏契约/CSGO/Apex/Valorant 的在线准星制作工具</title>
     <meta name="description" content="专业的FPS游戏准心生成器，支持无畏契约(Valorant)、CSGO、CS2、Apex英雄等热门射击游戏。在线自定义准星样式、颜色、大小，一键生成并导出透明PNG图片。提供类似瓦洛兰特的准心设置体验。">
     <meta name="keywords" content="FPS准心, 准星生成器, 十字准心, 无畏契约准心, Valorant Crosshair, CSGO准心, CS2准心, Apex英雄准心, 射击游戏辅助, 准心模拟器, 在线工具">
     <link rel="stylesheet" href="style.css">
@@ -13,8 +13,8 @@
     <header>
         <div class="container header-content">
             <div class="header-title">
-                <h1><i class="fas fa-crosshairs"></i> FPS 准心生成器</h1>
-                <p class="subtitle">适用于 Valorant / CS2 / Apex / Overwatch 的专业准心设计工具</p>
+                <h1><i class="fas fa-crosshairs"></i>威威猫的准心生成器</h1>
+                <p class="subtitle">适用于 Valorant / CS2 / Apex / Overwatch 的专业准心设计工具喵~</p>
             </div>
             <button id="historyBtn" class="history-btn"><i class="fas fa-history"></i> 历史记录</button>
         </div>
@@ -49,8 +49,8 @@
 
     <main class="container">
         <div class="intro-text">
-            <h2>为您的FPS游戏打造完美准星</h2>
-            <p>这是一个纯前端的在线准心生成工具，支持高度自定义。您可以像在《无畏契约 (Valorant)》、《反恐精英 (CS2/CS:GO)》、《Apex 英雄》等游戏中一样调整内十字、外十字、中心点等参数，并支持旋转角度设置。制作完成后，可直接导出透明背景的PNG图片用于直播OBS覆盖或游戏辅助。</p>
+            <h2>为您的FPS游戏打造完美准星喵</h2>
+            <p>这是一个纯前端的在线准心生成工具喵，支持高度自定义喵。您可以像在《无畏契约 (Valorant)》、《反恐精英 (CS2/CS:GO)》、《Apex 英雄》等游戏中一样调整内十字、外十字、中心点等参数，并支持旋转角度设置。制作完成后，可直接导出透明背景的PNG图片用于直播OBS覆盖或游戏辅助喵。</p>
         </div>
         <div class="layout">
             <!-- 预览区域 -->
@@ -162,24 +162,43 @@
                                     <input type="number" id="innerOpacityNum" min="0" max="1" step="0.1" value="1">
                                 </div>
 
-                                <label>长度</label>
-                                <div class="slider-row">
-                                    <input type="range" id="innerLength" min="0" max="20" step="1" value="6">
-                                    <input type="number" id="innerLengthNum" min="0" max="20" step="1" value="6">
+                                <div class="lock-row">
+                                    <button type="button" id="innerLock" class="lock-btn locked" title="已锁定：统一调整"><i class="fas fa-lock"></i></button>
+                                    <span class="lock-label">统一调整（点击解锁可单独调整上下左右）</span>
                                 </div>
 
-                                <label>厚度</label>
-                                <div class="slider-row">
-                                    <input type="range" id="innerThickness" min="1" max="10" step="1" value="2">
-                                    <input type="number" id="innerThicknessNum" min="1" max="10" step="1" value="2">
+                                <div class="inner-unified">
+                                    <label>长度</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="innerLength" min="0" max="20" step="1" value="6">
+                                        <input type="number" id="innerLengthNum" min="0" max="20" step="1" value="6">
+                                    </div>
+                                    <label>厚度</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="innerThickness" min="1" max="10" step="1" value="2">
+                                        <input type="number" id="innerThicknessNum" min="1" max="10" step="1" value="2">
+                                    </div>
+                                    <label>偏移量</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="innerOffset" min="0" max="20" step="1" value="3">
+                                        <input type="number" id="innerOffsetNum" min="0" max="20" step="1" value="3">
+                                    </div>
+                                </div>
+                                <div class="inner-per-direction" style="display:none">
+                                    <label>长度 上</label><div class="slider-row"><input type="range" id="innerLengthTop" min="0" max="20" step="1" value="6"><input type="number" id="innerLengthTopNum" min="0" max="20" value="6"></div>
+                                    <label>长度 下</label><div class="slider-row"><input type="range" id="innerLengthBottom" min="0" max="20" step="1" value="6"><input type="number" id="innerLengthBottomNum" min="0" max="20" value="6"></div>
+                                    <label>长度 左</label><div class="slider-row"><input type="range" id="innerLengthLeft" min="0" max="20" step="1" value="6"><input type="number" id="innerLengthLeftNum" min="0" max="20" value="6"></div>
+                                    <label>长度 右</label><div class="slider-row"><input type="range" id="innerLengthRight" min="0" max="20" step="1" value="6"><input type="number" id="innerLengthRightNum" min="0" max="20" value="6"></div>
+                                    <label>厚度 上</label><div class="slider-row"><input type="range" id="innerThicknessTop" min="1" max="10" step="1" value="2"><input type="number" id="innerThicknessTopNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 下</label><div class="slider-row"><input type="range" id="innerThicknessBottom" min="1" max="10" step="1" value="2"><input type="number" id="innerThicknessBottomNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 左</label><div class="slider-row"><input type="range" id="innerThicknessLeft" min="1" max="10" step="1" value="2"><input type="number" id="innerThicknessLeftNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 右</label><div class="slider-row"><input type="range" id="innerThicknessRight" min="1" max="10" step="1" value="2"><input type="number" id="innerThicknessRightNum" min="1" max="10" value="2"></div>
+                                    <label>偏移量 上</label><div class="slider-row"><input type="range" id="innerOffsetTop" min="0" max="20" step="1" value="3"><input type="number" id="innerOffsetTopNum" min="0" max="20" value="3"></div>
+                                    <label>偏移量 下</label><div class="slider-row"><input type="range" id="innerOffsetBottom" min="0" max="20" step="1" value="3"><input type="number" id="innerOffsetBottomNum" min="0" max="20" value="3"></div>
+                                    <label>偏移量 左</label><div class="slider-row"><input type="range" id="innerOffsetLeft" min="0" max="20" step="1" value="3"><input type="number" id="innerOffsetLeftNum" min="0" max="20" value="3"></div>
+                                    <label>偏移量 右</label><div class="slider-row"><input type="range" id="innerOffsetRight" min="0" max="20" step="1" value="3"><input type="number" id="innerOffsetRightNum" min="0" max="20" value="3"></div>
                                 </div>
 
-                                <label>偏移量</label>
-                                <div class="slider-row">
-                                    <input type="range" id="innerOffset" min="0" max="20" step="1" value="3">
-                                    <input type="number" id="innerOffsetNum" min="0" max="20" step="1" value="3">
-                                </div>
-                                
                                 <label>旋转 (度)</label>
                                 <div class="slider-row">
                                     <input type="range" id="innerRotation" min="0" max="360" step="1" value="0">
@@ -209,28 +228,90 @@
                                     <input type="number" id="outerOpacityNum" min="0" max="1" step="0.05" value="0.35">
                                 </div>
 
-                                <label>长度</label>
-                                <div class="slider-row">
-                                    <input type="range" id="outerLength" min="0" max="20" step="1" value="2">
-                                    <input type="number" id="outerLengthNum" min="0" max="20" step="1" value="2">
+                                <div class="lock-row">
+                                    <button type="button" id="outerLock" class="lock-btn locked" title="已锁定：统一调整"><i class="fas fa-lock"></i></button>
+                                    <span class="lock-label">统一调整（点击解锁可单独调整上下左右）</span>
                                 </div>
 
-                                <label>厚度</label>
-                                <div class="slider-row">
-                                    <input type="range" id="outerThickness" min="1" max="10" step="1" value="2">
-                                    <input type="number" id="outerThicknessNum" min="1" max="10" step="1" value="2">
+                                <div class="outer-unified">
+                                    <label>长度</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="outerLength" min="0" max="20" step="1" value="2">
+                                        <input type="number" id="outerLengthNum" min="0" max="20" step="1" value="2">
+                                    </div>
+                                    <label>厚度</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="outerThickness" min="1" max="10" step="1" value="2">
+                                        <input type="number" id="outerThicknessNum" min="1" max="10" step="1" value="2">
+                                    </div>
+                                    <label>偏移量</label>
+                                    <div class="slider-row">
+                                        <input type="range" id="outerOffset" min="0" max="40" step="1" value="10">
+                                        <input type="number" id="outerOffsetNum" min="0" max="40" step="1" value="10">
+                                    </div>
+                                </div>
+                                <div class="outer-per-direction" style="display:none">
+                                    <label>长度 上</label><div class="slider-row"><input type="range" id="outerLengthTop" min="0" max="20" step="1" value="2"><input type="number" id="outerLengthTopNum" min="0" max="20" value="2"></div>
+                                    <label>长度 下</label><div class="slider-row"><input type="range" id="outerLengthBottom" min="0" max="20" step="1" value="2"><input type="number" id="outerLengthBottomNum" min="0" max="20" value="2"></div>
+                                    <label>长度 左</label><div class="slider-row"><input type="range" id="outerLengthLeft" min="0" max="20" step="1" value="2"><input type="number" id="outerLengthLeftNum" min="0" max="20" value="2"></div>
+                                    <label>长度 右</label><div class="slider-row"><input type="range" id="outerLengthRight" min="0" max="20" step="1" value="2"><input type="number" id="outerLengthRightNum" min="0" max="20" value="2"></div>
+                                    <label>厚度 上</label><div class="slider-row"><input type="range" id="outerThicknessTop" min="1" max="10" step="1" value="2"><input type="number" id="outerThicknessTopNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 下</label><div class="slider-row"><input type="range" id="outerThicknessBottom" min="1" max="10" step="1" value="2"><input type="number" id="outerThicknessBottomNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 左</label><div class="slider-row"><input type="range" id="outerThicknessLeft" min="1" max="10" step="1" value="2"><input type="number" id="outerThicknessLeftNum" min="1" max="10" value="2"></div>
+                                    <label>厚度 右</label><div class="slider-row"><input type="range" id="outerThicknessRight" min="1" max="10" step="1" value="2"><input type="number" id="outerThicknessRightNum" min="1" max="10" value="2"></div>
+                                    <label>偏移量 上</label><div class="slider-row"><input type="range" id="outerOffsetTop" min="0" max="40" step="1" value="10"><input type="number" id="outerOffsetTopNum" min="0" max="40" value="10"></div>
+                                    <label>偏移量 下</label><div class="slider-row"><input type="range" id="outerOffsetBottom" min="0" max="40" step="1" value="10"><input type="number" id="outerOffsetBottomNum" min="0" max="40" value="10"></div>
+                                    <label>偏移量 左</label><div class="slider-row"><input type="range" id="outerOffsetLeft" min="0" max="40" step="1" value="10"><input type="number" id="outerOffsetLeftNum" min="0" max="40" value="10"></div>
+                                    <label>偏移量 右</label><div class="slider-row"><input type="range" id="outerOffsetRight" min="0" max="40" step="1" value="10"><input type="number" id="outerOffsetRightNum" min="0" max="40" value="10"></div>
                                 </div>
 
-                                <label>偏移量</label>
-                                <div class="slider-row">
-                                    <input type="range" id="outerOffset" min="0" max="40" step="1" value="10">
-                                    <input type="number" id="outerOffsetNum" min="0" max="40" step="1" value="10">
-                                </div>
-                                
                                 <label>旋转 (度)</label>
                                 <div class="slider-row">
                                     <input type="range" id="outerRotation" min="0" max="360" step="1" value="0">
                                     <input type="number" id="outerRotationNum" min="0" max="360" step="1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 外框 (多边形/圆形) -->
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>外框 (Frame)</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="control-group">
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="showFrame">
+                                    <label for="showFrame">显示外框（以中心为圆心的多边形/圆）</label>
+                                </div>
+                            </div>
+                            <div class="slider-group" data-dependency="showFrame">
+                                <label>不透明度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="frameOpacity" min="0" max="1" step="0.1" value="0.8">
+                                    <input type="number" id="frameOpacityNum" min="0" max="1" step="0.1" value="0.8">
+                                </div>
+                                <label>边数 / 平滑程度（3=三角 4=四边形 6=六边形 32=圆）</label>
+                                <div class="slider-row">
+                                    <input type="range" id="frameSides" min="3" max="32" step="1" value="6">
+                                    <input type="number" id="frameSidesNum" min="3" max="32" step="1" value="6">
+                                </div>
+                                <label>半径（越大越往外扩）</label>
+                                <div class="slider-row">
+                                    <input type="range" id="frameRadius" min="5" max="200" step="1" value="40">
+                                    <input type="number" id="frameRadiusNum" min="5" max="200" step="1" value="40">
+                                </div>
+                                <label>线条厚度</label>
+                                <div class="slider-row">
+                                    <input type="range" id="frameThickness" min="1" max="15" step="1" value="2">
+                                    <input type="number" id="frameThicknessNum" min="1" max="15" step="1" value="2">
+                                </div>
+                                <label>旋转 (度)</label>
+                                <div class="slider-row">
+                                    <input type="range" id="frameRotation" min="0" max="360" step="1" value="0">
+                                    <input type="number" id="frameRotationNum" min="0" max="360" step="1" value="0">
                                 </div>
                             </div>
                         </div>
@@ -244,7 +325,7 @@
         <div class="container footer-content">
             <p>This web site disign by chenj</p>
             <div class="visitor-counter">
-                <img src="https://count.getloli.com/@zhunxin-gen?name=zhunxin-gen&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="Visitor Count">
+                <!-- <img src="https://count.getloli.com/@zhunxin-gen?name=zhunxin-gen&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="Visitor Count"> -->
             </div>
         </div>
     </footer>
