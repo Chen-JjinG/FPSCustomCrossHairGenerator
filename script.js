@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         export: {
             size: 200,
             scale: 1.85
-        }
+        },
+        customLines: [],
+        customGroups: []
     };
     
     // Store initial state to detect changes
@@ -228,6 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Custom Lines
+        initCustomLinesUI();
+
         // Export & Import
         inputs.export.size.addEventListener('change', (e) => {
             config.export.size = parseInt(e.target.value) || 200;
@@ -382,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (config.inner.enabled) drawGroupOutline(targetCtx, cx, cy, config.inner, outlineColor, oThick, scale);
             if (config.outer.enabled) drawGroupOutline(targetCtx, cx, cy, config.outer, outlineColor, oThick, scale);
             if (config.frame && config.frame.enabled) drawFrameOutline(targetCtx, cx, cy, config.frame, outlineColor, oThick, scale);
+            if (config.customLines && config.customLines.length > 0) drawCustomLinesOutline(targetCtx, cx, cy, config.customLines, outlineColor, oThick, scale);
         }
 
         // 2. Draw Fills
@@ -394,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (config.inner.enabled) drawGroupFill(targetCtx, cx, cy, config.inner, fillColor, scale);
         if (config.outer.enabled) drawGroupFill(targetCtx, cx, cy, config.outer, fillColor, scale);
         if (config.frame && config.frame.enabled) drawFrameFill(targetCtx, cx, cy, config.frame, fillColor, scale);
+        if (config.customLines && config.customLines.length > 0) drawCustomLinesFill(targetCtx, cx, cy, config.customLines, fillColor, scale);
     }
 
     // Arm order after each rotate(90°): 0=下, 1=左, 2=上, 3=右 (screen direction)
@@ -484,6 +491,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         ctx.closePath();
         ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawCustomLinesOutline(ctx, cx, cy, customLines, color, oThick, scale) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = color;
+
+        // 1. Draw ungrouped lines
+        for (let line of customLines) {
+            if (line.groupId) continue;
+            ctx.save();
+            ctx.translate(line.offsetX * scale, line.offsetY * scale);
+            ctx.rotate(line.rotation * Math.PI / 180);
+            const length = line.length * scale;
+            const thickness = line.thickness * scale;
+            ctx.fillRect(-length / 2 - oThick, -thickness / 2 - oThick, length + oThick * 2, thickness + oThick * 2);
+            ctx.restore();
+        }
+
+        // 2. Draw lines in groups
+        if (config.customGroups) {
+            for (let group of config.customGroups) {
+                ctx.save();
+                ctx.translate(group.offsetX * scale, group.offsetY * scale);
+                ctx.rotate(group.rotation * Math.PI / 180);
+                ctx.scale(group.scale, group.scale);
+
+                for (let line of customLines) {
+                    if (line.groupId !== group.id) continue;
+                    ctx.save();
+                    ctx.translate(line.offsetX * scale, line.offsetY * scale);
+                    ctx.rotate(line.rotation * Math.PI / 180);
+                    const length = line.length * scale;
+                    const thickness = line.thickness * scale;
+                    ctx.fillRect(-length / 2 - oThick, -thickness / 2 - oThick, length + oThick * 2, thickness + oThick * 2);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+        }
+
+        ctx.restore();
+    }
+
+    function drawCustomLinesFill(ctx, cx, cy, customLines, hexColor, scale) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+
+        // 1. Draw ungrouped lines
+        for (let line of customLines) {
+            if (line.groupId) continue;
+            const opacity = line.opacity !== undefined ? line.opacity : 1.0;
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            ctx.save();
+            ctx.translate(line.offsetX * scale, line.offsetY * scale);
+            ctx.rotate(line.rotation * Math.PI / 180);
+            const length = line.length * scale;
+            const thickness = line.thickness * scale;
+            ctx.fillRect(-length / 2, -thickness / 2, length, thickness);
+            ctx.restore();
+        }
+
+        // 2. Draw lines in groups
+        if (config.customGroups) {
+            for (let group of config.customGroups) {
+                ctx.save();
+                ctx.translate(group.offsetX * scale, group.offsetY * scale);
+                ctx.rotate(group.rotation * Math.PI / 180);
+                ctx.scale(group.scale, group.scale);
+
+                for (let line of customLines) {
+                    if (line.groupId !== group.id) continue;
+                    const opacity = line.opacity !== undefined ? line.opacity : 1.0;
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    ctx.save();
+                    ctx.translate(line.offsetX * scale, line.offsetY * scale);
+                    ctx.rotate(line.rotation * Math.PI / 180);
+                    const length = line.length * scale;
+                    const thickness = line.thickness * scale;
+                    ctx.fillRect(-length / 2, -thickness / 2, length, thickness);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+        }
+
         ctx.restore();
     }
 
@@ -612,7 +709,411 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function initCustomLinesUI() {
+        const addBtn = document.getElementById('addCustomLineBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                if (!config.customLines) config.customLines = [];
+                config.customLines.push({
+                    id: Date.now() + Math.random(),
+                    length: 10,
+                    thickness: 2,
+                    offsetX: 0,
+                    offsetY: 0,
+                    rotation: 0,
+                    opacity: 1.0,
+                    isExpanded: true
+                });
+                renderCustomLinesUI();
+                draw();
+            });
+        }
+
+        const addGroupBtn = document.getElementById('addCustomGroupBtn');
+        if (addGroupBtn) {
+            addGroupBtn.addEventListener('click', () => {
+                if (!config.customGroups) config.customGroups = [];
+                config.customGroups.push({
+                    id: Date.now() + Math.random(),
+                    name: '新分组',
+                    offsetX: 0,
+                    offsetY: 0,
+                    rotation: 0,
+                    scale: 1.0,
+                    opacity: 1.0,
+                    isExpanded: true
+                });
+                renderCustomLinesUI();
+                draw();
+            });
+        }
+    }
+
+    function renderCustomLinesUI() {
+        const container = document.getElementById('customLinesContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        if (!config.customLines) config.customLines = [];
+        if (!config.customGroups) config.customGroups = [];
+        
+        // Render Groups
+        config.customGroups.forEach((group, gIndex) => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'custom-group-item accordion-item';
+             if (group.isExpanded) groupDiv.classList.add('active');
+             groupDiv.style.border = '1px solid var(--accent-color)';
+             groupDiv.style.marginBottom = '10px';
+             groupDiv.style.borderRadius = '4px';
+             groupDiv.dataset.groupId = group.id;
+ 
+             groupDiv.innerHTML = `
+                 <div class="accordion-header" style="padding: 10px; background: rgba(0, 255, 136, 0.05); cursor: pointer;">
+                     <div style="display: flex; align-items: center; gap: 8px;">
+                         <i class="fas fa-grip-vertical group-drag-handle" style="color: #666; cursor: grab; padding: 5px;" draggable="true"></i>
+                         <i class="fas fa-folder"></i>
+                         <input type="text" class="group-name-input" value="${group.name}" style="background: transparent; border: none; color: var(--accent-color); font-weight: bold; width: 100px;">
+                     </div>
+                     <div style="display: flex; gap: 10px; align-items: center;">
+                         <i class="fas fa-chevron-down"></i>
+                         <button type="button" class="copy-group-btn" title="复制分组" style="background: none; border: none; color: var(--accent-color); cursor: pointer; padding: 5px;">
+                             <i class="fas fa-copy"></i>
+                         </button>
+                         <button type="button" class="remove-group-btn" data-index="${gIndex}" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 5px;">
+                             <i class="fas fa-trash"></i>
+                         </button>
+                     </div>
+                 </div>
+                 
+                 <div class="accordion-content">
+                    <div class="accordion-inner-wrapper">
+                        <div class="group-controls" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color);">
+                            <label>分组整体旋转</label>
+                            <div class="slider-row">
+                                <input type="range" class="cg-rotation-range" min="0" max="360" step="1" value="${group.rotation}">
+                                <input type="number" class="cg-rotation-num" min="0" max="360" step="1" value="${group.rotation}">
+                            </div>
+                            <label>分组整体缩放</label>
+                            <div class="slider-row">
+                                <input type="range" class="cg-scale-range" min="0.1" max="5" step="0.1" value="${group.scale}">
+                                <input type="number" class="cg-scale-num" min="0.1" max="5" step="0.1" value="${group.scale}">
+                            </div>
+                            <label>分组水平偏移 (X)</label>
+                            <div class="slider-row">
+                                <input type="range" class="cg-offsetx-range" min="-200" max="200" step="1" value="${group.offsetX}">
+                                <input type="number" class="cg-offsetx-num" min="-200" max="200" step="1" value="${group.offsetX}">
+                            </div>
+                            <label>分组垂直偏移 (Y)</label>
+                            <div class="slider-row">
+                                <input type="range" class="cg-offsety-range" min="-200" max="200" step="1" value="${group.offsetY}">
+                                <input type="number" class="cg-offsety-num" min="-200" max="200" step="1" value="${group.offsetY}">
+                            </div>
+                        </div>
+                        <div class="group-lines-container" style="min-height: 40px; border: 1px dashed #555; padding: 5px; border-radius: 4px;">
+                            <!-- Lines in this group will be appended here -->
+                        </div>
+                    </div>
+                 </div>
+             `;
+            
+            container.appendChild(groupDiv);
+
+            // Group Events
+             const groupHeader = groupDiv.querySelector('.accordion-header');
+
+             groupHeader.onclick = (e) => {
+                 // 排除功能按钮
+                 if (e.target.closest('.remove-group-btn') || e.target.closest('.group-name-input') || e.target.closest('.group-drag-handle') || e.target.closest('.copy-group-btn')) {
+                     return;
+                 }
+                 
+                 e.preventDefault();
+                 e.stopPropagation();
+                 
+                 group.isExpanded = !group.isExpanded;
+                 groupDiv.classList.toggle('active', group.isExpanded);
+             };
+
+            groupDiv.querySelector('.group-name-input').addEventListener('change', (e) => {
+                group.name = e.target.value;
+            });
+
+             groupDiv.querySelector('.remove-group-btn').addEventListener('click', () => {
+                 // Move lines out of group before removing
+                 config.customLines.forEach(line => {
+                     if (line.groupId === group.id) delete line.groupId;
+                 });
+                 config.customGroups.splice(gIndex, 1);
+                 renderCustomLinesUI();
+                 draw();
+             });
+
+             groupDiv.querySelector('.copy-group-btn').addEventListener('click', () => {
+                 const newGroupId = Date.now() + Math.random();
+                 const groupCopy = {
+                     ...group,
+                     id: newGroupId,
+                     name: group.name + ' (副本)',
+                     isExpanded: true
+                 };
+                 config.customGroups.push(groupCopy);
+                 
+                 // Copy lines in group
+                 const linesInGroup = config.customLines.filter(l => l.groupId === group.id);
+                 linesInGroup.forEach(line => {
+                     const lineCopy = {
+                         ...line,
+                         id: Date.now() + Math.random(),
+                         groupId: newGroupId
+                     };
+                     config.customLines.push(lineCopy);
+                 });
+                 
+                 renderCustomLinesUI();
+                 draw();
+             });
+
+            const bindGroupSlider = (classNameRange, classNameNum, key) => {
+                const rangeInput = groupDiv.querySelector(classNameRange);
+                const numInput = groupDiv.querySelector(classNameNum);
+                rangeInput.addEventListener('input', (e) => {
+                    group[key] = parseFloat(e.target.value);
+                    numInput.value = group[key];
+                    draw();
+                });
+                numInput.addEventListener('input', (e) => {
+                    group[key] = parseFloat(e.target.value);
+                    rangeInput.value = group[key];
+                    draw();
+                });
+            };
+            bindGroupSlider('.cg-rotation-range', '.cg-rotation-num', 'rotation');
+            bindGroupSlider('.cg-scale-range', '.cg-scale-num', 'scale');
+            bindGroupSlider('.cg-offsetx-range', '.cg-offsetx-num', 'offsetX');
+            bindGroupSlider('.cg-offsety-range', '.cg-offsety-num', 'offsetY');
+
+            const groupHandle = groupDiv.querySelector('.group-drag-handle');
+            groupHandle.addEventListener('dragstart', (e) => {
+                 e.dataTransfer.setData('groupId', group.id);
+                 groupDiv.style.opacity = '0.5';
+             });
+             groupHandle.addEventListener('dragend', () => {
+                 groupDiv.style.opacity = '';
+             });
+            
+             // Drag and Drop for Group (as drop target)
+             const groupHeaderForDrop = groupDiv.querySelector('.accordion-header');
+             const linesContainer = groupDiv.querySelector('.group-lines-container');
+
+             const handleDragOver = (e) => {
+                 e.preventDefault();
+                 groupDiv.style.background = 'rgba(0, 255, 136, 0.1)';
+                 groupDiv.style.boxShadow = '0 0 8px var(--accent-color)';
+             };
+
+             const handleDragLeave = () => {
+                 groupDiv.style.background = '';
+                 groupDiv.style.boxShadow = '';
+             };
+
+             const handleDrop = (e) => {
+                 e.preventDefault();
+                 groupDiv.style.background = '';
+                 groupDiv.style.boxShadow = '';
+                 const lineId = parseFloat(e.dataTransfer.getData('lineId'));
+                 const line = config.customLines.find(l => l.id === lineId);
+                 if (line) {
+                     line.groupId = group.id;
+                     renderCustomLinesUI();
+                     draw();
+                 }
+             };
+
+             // 同时在头部和内容区支持放置
+             groupHeaderForDrop.addEventListener('dragover', handleDragOver);
+             groupHeaderForDrop.addEventListener('dragleave', handleDragLeave);
+             groupHeaderForDrop.addEventListener('drop', handleDrop);
+
+             linesContainer.addEventListener('dragover', handleDragOver);
+             linesContainer.addEventListener('dragleave', handleDragLeave);
+             linesContainer.addEventListener('drop', handleDrop);
+        });
+
+        // Drop target for ungrouped lines
+        const ungroupedContainer = document.createElement('div');
+        ungroupedContainer.className = 'ungrouped-lines-container';
+        ungroupedContainer.style.marginTop = '10px';
+        ungroupedContainer.style.minHeight = '50px';
+        ungroupedContainer.innerHTML = '<p style="color: #666; font-size: 0.8rem; margin-bottom: 5px;">未分组线段 (可拖拽至此移出分组)</p>';
+        container.appendChild(ungroupedContainer);
+
+        ungroupedContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            ungroupedContainer.style.background = 'rgba(255, 255, 255, 0.05)';
+        });
+        ungroupedContainer.addEventListener('dragleave', () => {
+            ungroupedContainer.style.background = '';
+        });
+        ungroupedContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            ungroupedContainer.style.background = '';
+            const lineId = parseFloat(e.dataTransfer.getData('lineId'));
+            const line = config.customLines.find(l => l.id === lineId);
+            if (line) {
+                delete line.groupId;
+                renderCustomLinesUI();
+                draw();
+            }
+        });
+
+        // Render Lines
+        config.customLines.forEach((line, index) => {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'custom-line-item accordion-item';
+            if (line.isExpanded) lineDiv.classList.add('active');
+            lineDiv.style.border = '1px solid var(--border-color)';
+            lineDiv.style.marginBottom = '10px';
+            lineDiv.style.borderRadius = '4px';
+            lineDiv.dataset.lineId = line.id;
+
+            lineDiv.innerHTML = `
+                <div class="accordion-header" style="padding: 10px; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-grip-lines line-drag-handle" style="color: #666; cursor: grab; padding: 5px;" draggable="true"></i>
+                        <strong style="color: var(--accent-color);">线段 ${index + 1}</strong>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <i class="fas fa-chevron-down"></i>
+                        <button type="button" class="copy-line-btn" title="复制线段" style="background: none; border: none; color: var(--accent-color); cursor: pointer; padding: 5px;">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button type="button" class="remove-line-btn" data-index="${index}" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 5px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="accordion-content">
+                    <div class="accordion-inner-wrapper">
+                        <label>长度</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-length-range" min="1" max="200" step="1" value="${line.length}">
+                            <input type="number" class="cl-length-num" min="1" max="200" step="1" value="${line.length}">
+                        </div>
+                        
+                        <label>厚度</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-thickness-range" min="1" max="50" step="1" value="${line.thickness}">
+                            <input type="number" class="cl-thickness-num" min="1" max="50" step="1" value="${line.thickness}">
+                        </div>
+                        
+                        <label>水平偏移 (X)</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-offsetx-range" min="-200" max="200" step="1" value="${line.offsetX}">
+                            <input type="number" class="cl-offsetx-num" min="-200" max="200" step="1" value="${line.offsetX}">
+                        </div>
+                        
+                        <label>垂直偏移 (Y)</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-offsety-range" min="-200" max="200" step="1" value="${line.offsetY}">
+                            <input type="number" class="cl-offsety-num" min="-200" max="200" step="1" value="${line.offsetY}">
+                        </div>
+                        
+                        <label>旋转 (度)</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-rotation-range" min="0" max="360" step="1" value="${line.rotation}">
+                            <input type="number" class="cl-rotation-num" min="0" max="360" step="1" value="${line.rotation}">
+                        </div>
+
+                        <label>不透明度</label>
+                        <div class="slider-row">
+                            <input type="range" class="cl-opacity-range" min="0" max="1" step="0.1" value="${line.opacity !== undefined ? line.opacity : 1.0}">
+                            <input type="number" class="cl-opacity-num" min="0" max="1" step="0.1" value="${line.opacity !== undefined ? line.opacity : 1.0}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Append to group or container
+            if (line.groupId) {
+                const groupContainer = container.querySelector(`[data-group-id="${line.groupId}"] .group-lines-container`);
+                if (groupContainer) groupContainer.appendChild(lineDiv);
+                else ungroupedContainer.appendChild(lineDiv);
+            } else {
+                ungroupedContainer.appendChild(lineDiv);
+            }
+
+            // Bind accordion toggle
+            const lineHeader = lineDiv.querySelector('.accordion-header');
+
+            lineHeader.onclick = (e) => {
+                // 排除功能按钮
+                if (e.target.closest('.remove-line-btn') || e.target.closest('.line-drag-handle') || e.target.closest('.copy-line-btn')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                line.isExpanded = !line.isExpanded;
+                lineDiv.classList.toggle('active', line.isExpanded);
+            };
+
+            // Bind events
+            lineDiv.querySelector('.remove-line-btn').addEventListener('click', (e) => {
+                const idx = config.customLines.findIndex(l => l.id === line.id);
+                if (idx !== -1) config.customLines.splice(idx, 1);
+                renderCustomLinesUI();
+                draw();
+            });
+
+            lineDiv.querySelector('.copy-line-btn').addEventListener('click', (e) => {
+                const lineCopy = {
+                    ...line,
+                    id: Date.now() + Math.random(),
+                    isExpanded: true
+                };
+                config.customLines.push(lineCopy);
+                renderCustomLinesUI();
+                draw();
+            });
+
+            const bindLineSlider = (classNameRange, classNameNum, key) => {
+                const rangeInput = lineDiv.querySelector(classNameRange);
+                const numInput = lineDiv.querySelector(classNameNum);
+                rangeInput.addEventListener('input', (e) => {
+                    line[key] = parseFloat(e.target.value);
+                    numInput.value = line[key];
+                    draw();
+                });
+                numInput.addEventListener('input', (e) => {
+                    line[key] = parseFloat(e.target.value);
+                    rangeInput.value = line[key];
+                    draw();
+                });
+            };
+            bindLineSlider('.cl-length-range', '.cl-length-num', 'length');
+            bindLineSlider('.cl-thickness-range', '.cl-thickness-num', 'thickness');
+            bindLineSlider('.cl-offsetx-range', '.cl-offsetx-num', 'offsetX');
+            bindLineSlider('.cl-offsety-range', '.cl-offsety-num', 'offsetY');
+            bindLineSlider('.cl-rotation-range', '.cl-rotation-num', 'rotation');
+            bindLineSlider('.cl-opacity-range', '.cl-opacity-num', 'opacity');
+
+            const lineHandle = lineDiv.querySelector('.line-drag-handle');
+            lineHandle.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('lineId', line.id);
+                lineDiv.style.opacity = '0.5';
+            });
+            lineHandle.addEventListener('dragend', () => {
+                lineDiv.style.opacity = '';
+            });
+        });
+    }
+
     function updateUI() {
+        // Custom Lines
+        renderCustomLinesUI();
+
         // Color
         if (inputs.color) inputs.color.value = config.color;
         if (inputs.colorHex) inputs.colorHex.textContent = config.color;
@@ -705,6 +1206,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newConfig.inner) Object.assign(config.inner, newConfig.inner);
         if (newConfig.outer) Object.assign(config.outer, newConfig.outer);
         if (newConfig.frame) Object.assign(config.frame, newConfig.frame);
+        if (newConfig.customLines) {
+            config.customLines = JSON.parse(JSON.stringify(newConfig.customLines));
+            // Ensure every line has an ID and expanded state
+            config.customLines.forEach(line => {
+                if (!line.id) line.id = Date.now() + Math.random();
+                if (line.isExpanded === undefined) line.isExpanded = true;
+            });
+        } else {
+            config.customLines = [];
+        }
+        if (newConfig.customGroups) {
+            config.customGroups = JSON.parse(JSON.stringify(newConfig.customGroups));
+            // Ensure every group has an expanded state
+            config.customGroups.forEach(group => {
+                if (group.isExpanded === undefined) group.isExpanded = true;
+            });
+        } else {
+            config.customGroups = [];
+        }
         if (newConfig.export) {
              config.export = { ...newConfig.export };
         } else {
@@ -765,6 +1285,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newConfig.inner) Object.assign(config.inner, newConfig.inner);
             if (newConfig.outer) Object.assign(config.outer, newConfig.outer);
             if (newConfig.frame) Object.assign(config.frame, newConfig.frame);
+            if (newConfig.customLines) {
+                config.customLines = JSON.parse(JSON.stringify(newConfig.customLines));
+                // Ensure every line has an ID and expanded state
+                config.customLines.forEach(line => {
+                    if (!line.id) line.id = Date.now() + Math.random();
+                    if (line.isExpanded === undefined) line.isExpanded = true;
+                });
+            } else {
+                config.customLines = [];
+            }
+            if (newConfig.customGroups) {
+                config.customGroups = JSON.parse(JSON.stringify(newConfig.customGroups));
+                // Ensure every group has an expanded state
+                config.customGroups.forEach(group => {
+                    if (group.isExpanded === undefined) group.isExpanded = true;
+                });
+            } else {
+                config.customGroups = [];
+            }
             if (newConfig.export) {
                 config.export = { ...newConfig.export };
             } else {

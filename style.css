@@ -539,6 +539,7 @@ button.secondary-btn:hover {
     font-weight: 600;
     background-color: rgba(255, 255, 255, 0.02);
     transition: background-color 0.2s;
+    user-select: none;
 }
 
 .accordion-header:hover {
@@ -546,15 +547,27 @@ button.secondary-btn:hover {
 }
 
 .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), border-top 0.3s ease;
+    border-top: 1px solid transparent;
+}
+
+.accordion-item.active > .accordion-content {
+    max-height: 1000px; 
+    transition: max-height 0.3s ease-in, border-top 0.3s ease;
+    border-top: 1px solid var(--border-color);
+}
+
+.accordion-inner-wrapper {
     padding: 15px;
-    display: none;
 }
 
-.accordion-item.active .accordion-content {
-    display: block;
+.accordion-header .fa-chevron-down {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.accordion-item.active .accordion-header i {
+.accordion-item.active > .accordion-header .fa-chevron-down {
     transform: rotate(180deg);
 }
 
